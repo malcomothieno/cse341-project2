@@ -6,7 +6,7 @@ const doc = {
     description: 'RESTful API for managing movies and directors with full CRUD, validation, and error handling.',
     version: '1.0.0',
   },
-  host: 'cse341-project-827z.onrender.com',
+  host: 'cse341-project2-huok.onrender.com',
   schemes: ['https'],
 };
 
