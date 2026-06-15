@@ -1,0 +1,232 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Movie Database API",
+    "description": "RESTful API for managing a movie database. Full CRUD operations on Movies (8 fields) and Directors collections with data validation and error handling.",
+    "version": "1.0.0"
+  },
+  "host": "cse341-project-827z.onrender.com",
+  "schemes": ["https"],
+  "tags": [
+    { "name": "Movies", "description": "Endpoints for managing movie records — 8 fields per document" },
+    { "name": "Directors", "description": "Endpoints for managing director records" }
+  ],
+  "paths": {
+    "/movies": {
+      "get": {
+        "tags": ["Movies"],
+        "summary": "Get all movies",
+        "description": "Retrieves all documents from the MongoDB movies collection.",
+        "produces": ["application/json"],
+        "responses": {
+          "200": { "description": "Array of movie objects", "schema": { "type": "array", "items": { "$ref": "#/definitions/Movie" } } },
+          "500": { "description": "Internal server error" }
+        }
+      },
+      "post": {
+        "tags": ["Movies"],
+        "summary": "Create a new movie",
+        "description": "Adds a new movie to the movies collection. All 8 fields are required. Returns the new movie's ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          { "in": "body", "name": "body", "required": true, "description": "Movie object — all 8 fields required", "schema": { "$ref": "#/definitions/MovieInput" } }
+        ],
+        "responses": {
+          "201": {
+            "description": "Movie created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "Movie created successfully" },
+                "id": { "type": "string", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+              }
+            }
+          },
+          "400": { "description": "Validation failed — missing or invalid fields" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/movies/{id}": {
+      "get": {
+        "tags": ["Movies"],
+        "summary": "Get a movie by ID",
+        "description": "Retrieves a single movie from MongoDB using its unique ObjectId.",
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+        ],
+        "responses": {
+          "200": { "description": "Movie found", "schema": { "$ref": "#/definitions/Movie" } },
+          "400": { "description": "Invalid ID format" },
+          "404": { "description": "Movie not found" }
+        }
+      },
+      "put": {
+        "tags": ["Movies"],
+        "summary": "Update a movie by ID",
+        "description": "Updates fields on an existing movie. Only provided fields are changed. Validates numeric ranges before saving.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie to update", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
+          { "in": "body", "name": "body", "required": true, "description": "Fields to update", "schema": { "$ref": "#/definitions/MovieInput" } }
+        ],
+        "responses": {
+          "200": { "description": "Movie updated successfully" },
+          "400": { "description": "Validation failed or invalid ID" },
+          "404": { "description": "Movie not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Movies"],
+        "summary": "Delete a movie by ID",
+        "description": "Permanently removes a movie from the movies collection.",
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie to delete", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+        ],
+        "responses": {
+          "200": { "description": "Movie deleted successfully" },
+          "400": { "description": "Invalid ID format" },
+          "404": { "description": "Movie not found" }
+        }
+      }
+    },
+    "/directors": {
+      "get": {
+        "tags": ["Directors"],
+        "summary": "Get all directors",
+        "description": "Retrieves all documents from the MongoDB directors collection.",
+        "produces": ["application/json"],
+        "responses": {
+          "200": { "description": "Array of director objects", "schema": { "type": "array", "items": { "$ref": "#/definitions/Director" } } },
+          "500": { "description": "Internal server error" }
+        }
+      },
+      "post": {
+        "tags": ["Directors"],
+        "summary": "Create a new director",
+        "description": "Adds a new director to the directors collection. All 5 fields are required. Returns the new director's ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          { "in": "body", "name": "body", "required": true, "description": "Director object — all fields required", "schema": { "$ref": "#/definitions/DirectorInput" } }
+        ],
+        "responses": {
+          "201": {
+            "description": "Director created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "Director created successfully" },
+                "id": { "type": "string", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+              }
+            }
+          },
+          "400": { "description": "Validation failed — missing or invalid fields" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/directors/{id}": {
+      "get": {
+        "tags": ["Directors"],
+        "summary": "Get a director by ID",
+        "description": "Retrieves a single director from MongoDB using their unique ObjectId.",
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+        ],
+        "responses": {
+          "200": { "description": "Director found", "schema": { "$ref": "#/definitions/Director" } },
+          "400": { "description": "Invalid ID format" },
+          "404": { "description": "Director not found" }
+        }
+      },
+      "put": {
+        "tags": ["Directors"],
+        "summary": "Update a director by ID",
+        "description": "Updates fields on an existing director. Only provided fields are modified. Validates birthYear and name types before saving.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director to update", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
+          { "in": "body", "name": "body", "required": true, "description": "Fields to update", "schema": { "$ref": "#/definitions/DirectorInput" } }
+        ],
+        "responses": {
+          "200": { "description": "Director updated successfully" },
+          "400": { "description": "Validation failed or invalid ID" },
+          "404": { "description": "Director not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Directors"],
+        "summary": "Delete a director by ID",
+        "description": "Permanently removes a director from the directors collection.",
+        "produces": ["application/json"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director to delete", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+        ],
+        "responses": {
+          "200": { "description": "Director deleted successfully" },
+          "400": { "description": "Invalid ID format" },
+          "404": { "description": "Director not found" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Movie": {
+      "type": "object",
+      "properties": {
+        "_id": { "type": "string", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
+        "title": { "type": "string", "example": "Inception" },
+        "genre": { "type": "string", "example": "Sci-Fi" },
+        "releaseYear": { "type": "integer", "example": 2010 },
+        "rating": { "type": "number", "example": 8.8 },
+        "durationMinutes": { "type": "integer", "example": 148 },
+        "language": { "type": "string", "example": "English" },
+        "synopsis": { "type": "string", "example": "A thief who steals corporate secrets through dream-sharing technology." },
+        "directorName": { "type": "string", "example": "Christopher Nolan" }
+      }
+    },
+    "MovieInput": {
+      "type": "object",
+      "required": ["title", "genre", "releaseYear", "rating", "durationMinutes", "language", "synopsis", "directorName"],
+      "properties": {
+        "title": { "type": "string", "example": "Inception" },
+        "genre": { "type": "string", "example": "Sci-Fi" },
+        "releaseYear": { "type": "integer", "example": 2010 },
+        "rating": { "type": "number", "example": 8.8 },
+        "durationMinutes": { "type": "integer", "example": 148 },
+        "language": { "type": "string", "example": "English" },
+        "synopsis": { "type": "string", "example": "A thief who steals corporate secrets through dream-sharing technology." },
+        "directorName": { "type": "string", "example": "Christopher Nolan" }
+      }
+    },
+    "Director": {
+      "type": "object",
+      "properties": {
+        "_id": { "type": "string", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
+        "firstName": { "type": "string", "example": "Christopher" },
+        "lastName": { "type": "string", "example": "Nolan" },
+        "nationality": { "type": "string", "example": "British-American" },
+        "birthYear": { "type": "integer", "example": 1970 },
+        "knownFor": { "type": "string", "example": "Inception, The Dark Knight, Interstellar" }
+      }
+    },
+    "DirectorInput": {
+      "type": "object",
+      "required": ["firstName", "lastName", "nationality", "birthYear", "knownFor"],
+      "properties": {
+        "firstName": { "type": "string", "example": "Christopher" },
+        "lastName": { "type": "string", "example": "Nolan" },
+        "nationality": { "type": "string", "example": "British-American" },
+        "birthYear": { "type": "integer", "example": 1970 },
+        "knownFor": { "type": "string", "example": "Inception, The Dark Knight, Interstellar" }
+      }
+    }
+  }
+}

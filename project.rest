@@ -1,0 +1,124 @@
+# =============================================
+# Movie Database API - REST Client Test File
+# =============================================
+
+@BASE_URL = http://localhost:3000
+# @BASE_URL = https://cse341-project-827z.onrender.com
+
+### Root
+GET {{BASE_URL}}/
+
+###
+
+### Swagger Docs
+GET {{BASE_URL}}/api-docs
+
+###
+
+# =============================================
+# MOVIES
+# =============================================
+
+### GET all movies
+GET {{BASE_URL}}/movies
+
+###
+
+### GET single movie by ID
+GET {{BASE_URL}}/movies/REPLACE_WITH_MOVIE_ID
+
+###
+
+### POST - Create a movie (all 8 fields required)
+POST {{BASE_URL}}/movies
+Content-Type: application/json
+
+{
+  "title": "Tenet",
+  "genre": "Action",
+  "releaseYear": 2020,
+  "rating": 7.4,
+  "durationMinutes": 150,
+  "language": "English",
+  "synopsis": "A secret agent embarks on a time-bending mission to prevent World War III.",
+  "directorName": "Christopher Nolan"
+}
+
+###
+
+### POST - Validation test (missing fields - should return 400)
+POST {{BASE_URL}}/movies
+Content-Type: application/json
+
+{
+  "title": "Incomplete Movie"
+}
+
+###
+
+### PUT - Update a movie
+PUT {{BASE_URL}}/movies/REPLACE_WITH_MOVIE_ID
+Content-Type: application/json
+
+{
+  "rating": 8.0,
+  "genre": "Sci-Fi Thriller"
+}
+
+###
+
+### DELETE - Delete a movie
+DELETE {{BASE_URL}}/movies/REPLACE_WITH_MOVIE_ID
+
+###
+
+# =============================================
+# DIRECTORS
+# =============================================
+
+### GET all directors
+GET {{BASE_URL}}/directors
+
+###
+
+### GET single director by ID
+GET {{BASE_URL}}/directors/REPLACE_WITH_DIRECTOR_ID
+
+###
+
+### POST - Create a director (all fields required)
+POST {{BASE_URL}}/directors
+Content-Type: application/json
+
+{
+  "firstName": "Jordan",
+  "lastName": "Peele",
+  "nationality": "American",
+  "birthYear": 1979,
+  "knownFor": "Get Out, Us, Nope"
+}
+
+###
+
+### POST - Validation test (missing fields - should return 400)
+POST {{BASE_URL}}/directors
+Content-Type: application/json
+
+{
+  "firstName": "NoLastName"
+}
+
+###
+
+### PUT - Update a director
+PUT {{BASE_URL}}/directors/REPLACE_WITH_DIRECTOR_ID
+Content-Type: application/json
+
+{
+  "knownFor": "Get Out, Us, Nope, Monkey Man"
+}
+
+###
+
+### DELETE - Delete a director
+DELETE {{BASE_URL}}/directors/REPLACE_WITH_DIRECTOR_ID
