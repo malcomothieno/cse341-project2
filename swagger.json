@@ -2,21 +2,81 @@
   "swagger": "2.0",
   "info": {
     "title": "Movie Database API",
-    "description": "RESTful API for managing a movie database. Full CRUD operations on Movies (8 fields) and Directors collections with data validation and error handling.",
+    "description": "RESTful API for managing a movie database. Full CRUD on Movies (8 fields) and Directors. POST, PUT, DELETE routes are protected and require GitHub OAuth authentication.",
     "version": "1.0.0"
   },
   "host": "cse341-project2-huok.onrender.com",
   "schemes": ["https"],
+  "securityDefinitions": {
+    "githubOAuth": {
+      "type": "oauth2",
+      "authorizationUrl": "https://cse341-project2-huok.onrender.com/auth/github",
+      "flow": "implicit",
+      "scopes": {
+        "user:email": "Read user email"
+      }
+    }
+  },
   "tags": [
-    { "name": "Movies", "description": "Endpoints for managing movie records — 8 fields per document" },
-    { "name": "Directors", "description": "Endpoints for managing director records" }
+    { "name": "Auth", "description": "GitHub OAuth login, logout, and profile" },
+    { "name": "Movies", "description": "Movie records — 8 fields. GET is public. POST/PUT/DELETE require login." },
+    { "name": "Directors", "description": "Director records. GET is public. POST/PUT/DELETE require login." }
   ],
   "paths": {
+    "/auth/github": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Login with GitHub",
+        "description": "Redirects the user to GitHub to authenticate via OAuth. After successful login, the user is redirected to /auth/profile.",
+        "responses": {
+          "302": { "description": "Redirects to GitHub OAuth page" }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "View logged-in user profile",
+        "description": "Returns the currently authenticated user's GitHub profile info. Returns 401 if not logged in.",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "User is logged in",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "You are logged in" },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "username": { "type": "string", "example": "malcomothieno" },
+                    "displayName": { "type": "string", "example": "Malcom Othieno" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Not logged in" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Logs the current user out and destroys their session.",
+        "produces": ["application/json"],
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
     "/movies": {
       "get": {
         "tags": ["Movies"],
-        "summary": "Get all movies",
-        "description": "Retrieves all documents from the MongoDB movies collection.",
+        "summary": "Get all movies (public)",
+        "description": "Retrieves all documents from the MongoDB movies collection. No authentication required.",
         "produces": ["application/json"],
         "responses": {
           "200": { "description": "Array of movie objects", "schema": { "type": "array", "items": { "$ref": "#/definitions/Movie" } } },
@@ -25,10 +85,11 @@
       },
       "post": {
         "tags": ["Movies"],
-        "summary": "Create a new movie",
-        "description": "Adds a new movie to the movies collection. All 8 fields are required. Returns the new movie's ID.",
+        "summary": "Create a new movie (protected)",
+        "description": "Adds a new movie. All 8 fields required. Requires GitHub OAuth login — visit /auth/github first.",
         "consumes": ["application/json"],
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "in": "body", "name": "body", "required": true, "description": "Movie object — all 8 fields required", "schema": { "$ref": "#/definitions/MovieInput" } }
         ],
@@ -43,7 +104,8 @@
               }
             }
           },
-          "400": { "description": "Validation failed — missing or invalid fields" },
+          "400": { "description": "Validation failed" },
+          "401": { "description": "Unauthorized — login required" },
           "500": { "description": "Internal server error" }
         }
       }
@@ -51,11 +113,11 @@
     "/movies/{id}": {
       "get": {
         "tags": ["Movies"],
-        "summary": "Get a movie by ID",
-        "description": "Retrieves a single movie from MongoDB using its unique ObjectId.",
+        "summary": "Get a movie by ID (public)",
+        "description": "Retrieves a single movie by its MongoDB ObjectId. No authentication required.",
         "produces": ["application/json"],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
         ],
         "responses": {
           "200": { "description": "Movie found", "schema": { "$ref": "#/definitions/Movie" } },
@@ -65,10 +127,11 @@
       },
       "put": {
         "tags": ["Movies"],
-        "summary": "Update a movie by ID",
-        "description": "Updates fields on an existing movie. Only provided fields are changed. Validates numeric ranges before saving.",
+        "summary": "Update a movie by ID (protected)",
+        "description": "Updates fields on an existing movie. Requires GitHub OAuth login — visit /auth/github first.",
         "consumes": ["application/json"],
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie to update", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
           { "in": "body", "name": "body", "required": true, "description": "Fields to update", "schema": { "$ref": "#/definitions/MovieInput" } }
@@ -76,20 +139,23 @@
         "responses": {
           "200": { "description": "Movie updated successfully" },
           "400": { "description": "Validation failed or invalid ID" },
+          "401": { "description": "Unauthorized — login required" },
           "404": { "description": "Movie not found" }
         }
       },
       "delete": {
         "tags": ["Movies"],
-        "summary": "Delete a movie by ID",
-        "description": "Permanently removes a movie from the movies collection.",
+        "summary": "Delete a movie by ID (protected)",
+        "description": "Permanently removes a movie. Requires GitHub OAuth login — visit /auth/github first.",
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the movie to delete", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
         ],
         "responses": {
           "200": { "description": "Movie deleted successfully" },
           "400": { "description": "Invalid ID format" },
+          "401": { "description": "Unauthorized — login required" },
           "404": { "description": "Movie not found" }
         }
       }
@@ -97,8 +163,8 @@
     "/directors": {
       "get": {
         "tags": ["Directors"],
-        "summary": "Get all directors",
-        "description": "Retrieves all documents from the MongoDB directors collection.",
+        "summary": "Get all directors (public)",
+        "description": "Retrieves all documents from the MongoDB directors collection. No authentication required.",
         "produces": ["application/json"],
         "responses": {
           "200": { "description": "Array of director objects", "schema": { "type": "array", "items": { "$ref": "#/definitions/Director" } } },
@@ -107,10 +173,11 @@
       },
       "post": {
         "tags": ["Directors"],
-        "summary": "Create a new director",
-        "description": "Adds a new director to the directors collection. All 5 fields are required. Returns the new director's ID.",
+        "summary": "Create a new director (protected)",
+        "description": "Adds a new director. All 5 fields required. Requires GitHub OAuth login — visit /auth/github first.",
         "consumes": ["application/json"],
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "in": "body", "name": "body", "required": true, "description": "Director object — all fields required", "schema": { "$ref": "#/definitions/DirectorInput" } }
         ],
@@ -125,7 +192,8 @@
               }
             }
           },
-          "400": { "description": "Validation failed — missing or invalid fields" },
+          "400": { "description": "Validation failed" },
+          "401": { "description": "Unauthorized — login required" },
           "500": { "description": "Internal server error" }
         }
       }
@@ -133,11 +201,11 @@
     "/directors/{id}": {
       "get": {
         "tags": ["Directors"],
-        "summary": "Get a director by ID",
-        "description": "Retrieves a single director from MongoDB using their unique ObjectId.",
+        "summary": "Get a director by ID (public)",
+        "description": "Retrieves a single director by their MongoDB ObjectId. No authentication required.",
         "produces": ["application/json"],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
         ],
         "responses": {
           "200": { "description": "Director found", "schema": { "$ref": "#/definitions/Director" } },
@@ -147,10 +215,11 @@
       },
       "put": {
         "tags": ["Directors"],
-        "summary": "Update a director by ID",
-        "description": "Updates fields on an existing director. Only provided fields are modified. Validates birthYear and name types before saving.",
+        "summary": "Update a director by ID (protected)",
+        "description": "Updates fields on an existing director. Requires GitHub OAuth login — visit /auth/github first.",
         "consumes": ["application/json"],
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director to update", "example": "665f1a2b3c4d5e6f7a8b9c0d" },
           { "in": "body", "name": "body", "required": true, "description": "Fields to update", "schema": { "$ref": "#/definitions/DirectorInput" } }
@@ -158,20 +227,23 @@
         "responses": {
           "200": { "description": "Director updated successfully" },
           "400": { "description": "Validation failed or invalid ID" },
+          "401": { "description": "Unauthorized — login required" },
           "404": { "description": "Director not found" }
         }
       },
       "delete": {
         "tags": ["Directors"],
-        "summary": "Delete a director by ID",
-        "description": "Permanently removes a director from the directors collection.",
+        "summary": "Delete a director by ID (protected)",
+        "description": "Permanently removes a director. Requires GitHub OAuth login — visit /auth/github first.",
         "produces": ["application/json"],
+        "security": [{ "githubOAuth": ["user:email"] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string", "description": "MongoDB ObjectId of the director to delete", "example": "665f1a2b3c4d5e6f7a8b9c0d" }
         ],
         "responses": {
           "200": { "description": "Director deleted successfully" },
           "400": { "description": "Invalid ID format" },
+          "401": { "description": "Unauthorized — login required" },
           "404": { "description": "Director not found" }
         }
       }
