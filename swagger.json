@@ -5,7 +5,7 @@
     "description": "RESTful API for managing a movie database. Full CRUD operations on Movies (8 fields) and Directors collections with data validation and error handling.",
     "version": "1.0.0"
   },
-  "host": "cse341-project-827z.onrender.com",
+  "host": "cse341-project2-huok.onrender.com",
   "schemes": ["https"],
   "tags": [
     { "name": "Movies", "description": "Endpoints for managing movie records — 8 fields per document" },
